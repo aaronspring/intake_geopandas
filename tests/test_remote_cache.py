@@ -8,7 +8,7 @@ from intake_geopandas import GeoJSONSource, ShapefileSource
 
 import geopandas
 
-geopandas_version_allows_fsspec_caching = int(geopandas.__version__[:5].replace('.','')) > 81 # checks geopandas larger than 0.8.0
+geopandas_version_allows_fsspec_caching = int(geopandas.__version__[:5].replace('.','')) > 81 # checks geopandas larger than 0.8.1
 
 def try_clean_cache(item):
     c = None
@@ -21,7 +21,7 @@ def try_clean_cache(item):
         if os.path.exists(path):
             shutil.rmtree(path)
 
-@pytest.mark.skipif(not geopandas_version_allows_fsspec_caching, reason='requires geopandas release after 0.8.0')
+@pytest.mark.skipif(not geopandas_version_allows_fsspec_caching, reason='requires geopandas release after 0.8.1')
 @pytest.mark.parametrize(
     'url',
     [
@@ -43,6 +43,8 @@ def test_different_cachings_and_url(url, strategy):
     expected_location = item.storage_options[strategy]['cache_storage']
     try_clean_cache(item)
     assert not os.path.exists(expected_location)
+    item.read()
+    # read a second time, now from cache
     item.read()
     assert os.path.exists(expected_location)
     try_clean_cache(item)
@@ -88,7 +90,7 @@ def GeoJSONSource_countries_remote():
         }
     )
 
-@pytest.mark.skipif(not geopandas_version_allows_fsspec_caching, reason='requires geopandas release after 0.8.0')
+@pytest.mark.skipif(not geopandas_version_allows_fsspec_caching, reason='requires geopandas release after 0.8.1')
 @pytest.mark.parametrize('same_names', [False, True])
 def test_remote_GeoJSONSource(GeoJSONSource_countries_remote, same_names):
     """GeoJSONSource works with either `same_names` True or False."""
@@ -97,6 +99,8 @@ def test_remote_GeoJSONSource(GeoJSONSource_countries_remote, same_names):
     expected_location_on_disk = item.storage_options['simplecache']['cache_storage']
     try_clean_cache(item)
     assert not os.path.exists(expected_location_on_disk)
+    item.read()
+    # read a second time, now from cache
     item.read()
     assert os.path.exists(expected_location_on_disk)
     try_clean_cache(item)
